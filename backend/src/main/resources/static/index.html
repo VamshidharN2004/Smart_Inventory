@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Inventory System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>SmartInventory</h1>
+            </div>
+            <p class="subtitle">Real-time Inventory Reservation & Management</p>
+        </header>
+
+        <main>
+            <!-- Check Inventory Section -->
+            <section class="card glass">
+                <h2><i class="fa-solid fa-magnifying-glass"></i> Check Inventory</h2>
+                <div class="input-group">
+                    <input type="text" id="checkSkuInput" placeholder="Enter Product SKU (e.g. IPHONE15)"
+                        autocomplete="off">
+                    <button id="checkInventoryBtn" class="btn primary">Check Available</button>
+                </div>
+                <div id="inventoryResult" class="result-box hidden">
+                    <!-- Dynamic Content -->
+                </div>
+            </section>
+
+            <div class="grid-2">
+                <!-- Reserve Section -->
+                <section class="card glass">
+                    <h2><i class="fa-regular fa-bookmark"></i> Reserve Item</h2>
+                    <div class="form-group">
+                        <label>Product SKU</label>
+                        <input type="text" id="reserveSkuInput" placeholder="SKU">
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" id="reserveQtyInput" value="1" min="1">
+                    </div>
+                    <button id="reserveBtn" class="btn accent">Reserve Now</button>
+                    <div id="reserveResult" class="result-box hidden"></div>
+                </section>
+
+                <!-- Checkout Management Section -->
+                <section class="card glass">
+                    <h2><i class="fa-solid fa-cart-shopping"></i> Manage Checkout</h2>
+                    <div class="form-group">
+                        <label>Reservation ID</label>
+                        <input type="text" id="reservationIdInput" placeholder="Enter ID received from Reservation">
+                    </div>
+                    <div class="action-buttons">
+                        <button id="confirmBtn" class="btn success"><i class="fa-solid fa-check"></i> Confirm</button>
+                        <button id="cancelBtn" class="btn danger"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                    </div>
+                    <div id="checkoutResult" class="result-box hidden"></div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Smart Inventory System</p>
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

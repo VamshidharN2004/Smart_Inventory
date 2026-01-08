@@ -1,0 +1,12 @@
+package com.smartinventory.inventory_service.service;
+
+import com.smartinventory.inventory_service.model.Reservation;
+
+public interface ReservationService {
+
+    Reservation reserve(String sku, int quantity, String userId);
+
+    void confirmReservation(String reservationId);
+
+    void cancelReservation(String reservationId);
+}

@@ -1,0 +1,34 @@
+package com.smartinventory.inventory_service.controller;
+
+import com.smartinventory.inventory_service.service.ReservationService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/checkout")
+public class CheckoutController {
+
+    private final ReservationService reservationService;
+
+    public CheckoutController(ReservationService reservationService) {
+        this.reservationService = reservationService;
+    }
+
+    // ✅ POST /checkout/confirm
+    @PostMapping("/confirm")
+    public ResponseEntity<String> confirmCheckout(
+            @RequestParam String reservationId
+    ) {
+        reservationService.confirmReservation(reservationId);
+        return ResponseEntity.ok("Checkout confirmed");
+    }
+
+    // ✅ POST /checkout/cancel
+    @PostMapping("/cancel")
+    public ResponseEntity<String> cancelCheckout(
+            @RequestParam String reservationId
+    ) {
+        reservationService.cancelReservation(reservationId);
+        return ResponseEntity.ok("Checkout cancelled");
+    }
+}
