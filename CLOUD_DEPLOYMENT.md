@@ -43,4 +43,60 @@ Render is great but requires defining a `render.yaml` or deploying services indi
 ## Local Testing
 To test if your environment variables work locally:
 1.  Edit `.env` (it is ignored by git).
-2.  Run `docker-compose up --build`.
+
+## Step 4: AWS Deployment (EC2 Method)
+The easiest way to deploy `docker-compose` on AWS is using an **EC2 Instance**.
+
+### 1. Launch Instance
+1.  Go to **AWS Console** -> **EC2** -> **Launch Instance**.
+2.  **Name**: `Inventory-Server`
+3.  **OS**: `Ubuntu 24.04 LTS` (or latest).
+4.  **Instance Type**: `t3.small` (Recommended min 2GB RAM).
+5.  **Key Pair**: Create a new one, download the `.pem` file.
+6.  **Network Settings (Security Groups)**:
+    *   Allow **SSH** (Port 22).
+    *   Allow **HTTP** (Port 80) is not enough, we need custom ports.
+    *   **Edit Inbound Rules**: Add Custom TCP Rule for Port **3000** (Frontend) and **8080** (Backend).
+
+### 2. Connect to Instance
+Open your local terminal (where the `.pem` key is):
+```powershell
+# Fix permissions (Mac/Linux only, on Windows just skip)
+chmod 400 key.pem
+
+# SSH into the server (replace IP with your EC2 Public IP)
+ssh -i "key.pem" ubuntu@12.34.56.78
+```
+
+### 3. Install Docker on EC2
+Run these commands inside the EC2 terminal:
+```bash
+# Update and install Docker
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose
+
+# Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add user to docker group (so you don't need sudo)
+sudo usermod -aG docker $USER
+```
+*(You might need to type `exit` and ssh in again for the group change to take effect)*
+
+### 4. Deploy Code
+```bash
+# Clone your repo
+git clone https://github.com/VamshidharN2004/Smart_Inventory.git
+cd Smart_Inventory
+
+# Create .env file with your secrets
+nano .env
+# (Paste your MYSQL_ROOT_PASSWORD, MYSQL_DATABASE, and ALLOWED_ORIGIN here)
+# Press Ctrl+X, then Y, then Enter to save.
+
+# Start the app
+docker-compose up -d --build
+```
+Your app is now live at `http://<EC2-PUBLIC-IP>:3000`!
+
