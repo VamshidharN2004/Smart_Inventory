@@ -66,4 +66,16 @@ public class InventoryController {
                 "reserved", product.getReservedQuantity(),
                 "sold", product.getSoldQuantity()));
     }
+
+    @PostMapping("/inventory/product")
+    public ResponseEntity<?> createProduct(@RequestBody Map<String, Object> payload) {
+        try {
+            String sku = (String) payload.get("sku");
+            int totalQuantity = (Integer) payload.get("totalQuantity");
+            Product product = inventoryService.createProduct(sku, totalQuantity);
+            return ResponseEntity.ok(product);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
