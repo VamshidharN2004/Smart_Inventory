@@ -11,6 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping
+@CrossOrigin(origins = { "https://smart-inventory-virid.vercel.app", "http://localhost:3000" })
 public class InventoryController {
 
     @Autowired
