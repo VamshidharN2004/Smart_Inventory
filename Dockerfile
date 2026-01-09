@@ -1,8 +1,11 @@
 # Build Stage
 FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /app
-COPY . .
-# Fix permissions for Windows-based pushes
+
+# Copy the backend folder contents into /app
+COPY backend/ .
+
+# Fix permissions
 RUN chmod +x mvnw
 RUN ./mvnw clean package -DskipTests
 
