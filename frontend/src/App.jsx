@@ -3,7 +3,8 @@ import axios from 'axios';
 import './index.css';
 
 // Configure Axios Base URL
-axios.defaults.baseURL = 'http://localhost:8080';
+// Configure Axios Base URL - Use Cloud URL if available, else Localhost
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 function App() {
   // State
