@@ -11,7 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping
-@CrossOrigin(origins = { "https://smart-inventory-virid.vercel.app", "http://localhost:3000" })
+@CrossOrigin(origins = { "https://smart-inventory-virid.vercel.app", "http://localhost:3000", "http://localhost:5173" })
 public class InventoryController {
 
     @Autowired
@@ -19,6 +19,7 @@ public class InventoryController {
 
     @PostMapping("/inventory/reserve")
     public ResponseEntity<?> reserveInventory(@RequestBody Map<String, Object> payload) {
+        System.out.println("OLD INVENTORY RESERVE CALLED: " + payload);
         try {
             String sku = (String) payload.get("sku");
             int quantity = (Integer) payload.get("quantity");
@@ -60,12 +61,24 @@ public class InventoryController {
             return ResponseEntity.notFound().build();
         }
         int available = product.getTotalQuantity() - product.getReservedQuantity();
-        return ResponseEntity.ok(Map.of(
-                "sku", product.getSku(),
-                "available", available,
-                "total", product.getTotalQuantity(),
-                "reserved", product.getReservedQuantity(),
-                "sold", product.getSoldQuantity()));
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("sku", product.getSku());
+        response.put("available", available);
+        response.put("total", product.getTotalQuantity());
+        response.put("reserved", product.getReservedQuantity());
+        response.put("sold", product.getSoldQuantity());
+        // New fields
+        response.put("imageUrl", product.getImageUrl());
+        response.put("price", product.getPrice());
+        response.put("unit", product.getUnit());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/inventory/products")
+    public ResponseEntity<?> getAllProducts() {
+        return ResponseEntity.ok(inventoryService.getAllProducts());
     }
 
     @PostMapping("/inventory/product")
@@ -73,7 +86,38 @@ public class InventoryController {
         try {
             String sku = (String) payload.get("sku");
             int totalQuantity = (Integer) payload.get("totalQuantity");
-            Product product = inventoryService.createProduct(sku, totalQuantity);
+
+            // Handle optional new fields
+            String imageUrl = (String) payload.getOrDefault("imageUrl", "");
+            Double price = payload.containsKey("price") ? Double.valueOf(payload.get("price").toString()) : 0.0;
+            String unit = (String) payload.getOrDefault("unit", "Piece");
+
+            Product product = inventoryService.createProduct(sku, totalQuantity, imageUrl, price, unit);
+            return ResponseEntity.ok(product);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/inventory/product/{sku}")
+    public ResponseEntity<?> deleteProduct(@PathVariable String sku) {
+        try {
+            inventoryService.deleteProduct(sku);
+            return ResponseEntity.ok(Map.of("message", "Product deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/inventory/product/{sku}")
+    public ResponseEntity<?> updateProduct(@PathVariable String sku, @RequestBody Map<String, Object> payload) {
+        try {
+            int totalQuantity = (Integer) payload.get("totalQuantity");
+            String imageUrl = (String) payload.getOrDefault("imageUrl", "");
+            Double price = payload.containsKey("price") ? Double.valueOf(payload.get("price").toString()) : null;
+            String unit = (String) payload.getOrDefault("unit", "");
+
+            Product product = inventoryService.updateProduct(sku, totalQuantity, imageUrl, price, unit);
             return ResponseEntity.ok(product);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

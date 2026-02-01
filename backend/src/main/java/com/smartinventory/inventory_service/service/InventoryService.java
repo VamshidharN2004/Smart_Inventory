@@ -118,11 +118,61 @@ public class InventoryService {
         return productRepository.findById(sku).orElse(null);
     }
 
+    public java.util.List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
     // Seed data helper
     @Transactional
-    public Product createProduct(String sku, int quantity) {
-        Product p = new Product(sku, quantity, 0, 0);
+    public Product createProduct(String sku, int quantity, String imageUrl, Double price, String unit) {
+        Product p = new Product(sku, quantity, 0, 0, imageUrl, price, unit);
         return productRepository.save(p);
     }
 
+    @Transactional
+    public void deleteProduct(String sku) {
+        System.out.println("Attempting to delete product: " + sku);
+        Product product = productRepository.findBySkuWithLock(sku)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        System.out.println("Deleting reservations for sku: " + sku);
+        reservationRepository.deleteBySku(sku);
+
+        try {
+            productRepository.delete(product);
+            productRepository.flush(); // Force execute to catch exception
+            System.out.println("Product deleted: " + sku);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            System.out.println("DELETE FAILED: " + e.getMessage());
+            throw new RuntimeException(
+                    "Cannot delete product: It has existing sales history. You can mark it as out of stock instead.");
+        }
+    }
+
+    @Transactional
+    public Product updateProduct(String sku, int totalQuantity, String imageUrl, Double price, String unit) {
+        System.out.println("SERVICE UPDATE PRODUCT: " + sku + " New Total: " + totalQuantity);
+        Product product = productRepository.findBySkuWithLock(sku)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        product.setTotalQuantity(totalQuantity);
+
+        System.out.println("RESETTING RESERVED QTY FOR: " + sku);
+        // Reset reserved quantity to 0 when admin manually updates stock.
+        // This prevents "stuck" reservations from confusing the available count.
+        product.setReservedQuantity(0);
+        reservationRepository.deleteBySku(sku); // Optional: Clear actual reservation records if you want a hard reset
+
+        if (imageUrl != null && !imageUrl.isEmpty())
+            product.setImageUrl(imageUrl);
+        if (price != null)
+            product.setPrice(price);
+        if (unit != null && !unit.isEmpty())
+            product.setUnit(unit);
+
+        Product saved = productRepository.save(product);
+        System.out.println(
+                "PRODUCT SAVED. Total: " + saved.getTotalQuantity() + " Reserved: " + saved.getReservedQuantity());
+        return saved;
+    }
 }

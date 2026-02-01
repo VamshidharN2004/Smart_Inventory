@@ -53,4 +53,4 @@ npm run dev
 | `POST` | `/checkout/cancel` | Cancel reservation manually |
 
 ---
-*Built with ❤️ by [Your Name]*
+*Built with ❤️ by [N.Vamshidhar]*

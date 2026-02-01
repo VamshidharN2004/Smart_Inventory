@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, String> {
         List<Reservation> findByStatusAndExpiresAtBefore(ReservationStatus status, LocalDateTime now);
+
+        void deleteBySku(String sku);
 }

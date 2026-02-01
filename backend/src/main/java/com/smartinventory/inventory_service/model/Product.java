@@ -19,4 +19,8 @@ public class Product {
     private int totalQuantity;
     private int reservedQuantity;
     private int soldQuantity;
+
+    private String imageUrl;
+    private Double price;
+    private String unit; // Kilogram, Liter, Piece, etc.
 }

@@ -15,12 +15,4 @@ public class InventoryServiceApplication {
 		SpringApplication.run(InventoryServiceApplication.class, args);
 	}
 
-	// @Bean
-	// CommandLineRunner init(InventoryService inventoryService) {
-	// return args -> {
-	// // Data seeding disabled per user request
-	// };
-	// }
 }
-
-

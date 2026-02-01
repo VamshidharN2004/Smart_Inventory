@@ -1,238 +1,225 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Dashboard from './components/Dashboard';
+import Admin from './components/Admin';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import Home from './components/Home';
+import Shop from './components/Shop';
+import ReservationPage from './components/ReservationPage';
+import Contact from './components/Contact';
+import Cart from './components/Cart';
+import OrderSuccess from './components/OrderSuccess';
+import CheckoutSummary from './components/CheckoutSummary';
+import MyOrders from './components/MyOrders';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { CartProvider, useCart } from './context/CartContext';
 import './index.css';
 
 // Configure Axios Base URL
-// Configure Axios Base URL - Use Cloud URL if available, else Localhost
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
-function App() {
-  // State
-  const [checkSku, setCheckSku] = useState('');
-  const [inventoryResult, setInventoryResult] = useState(null);
+// Protected Route Wrapper
+const ProtectedRoute = ({ children, roleRequired }) => {
+  const { user, authLoading } = useAuth();
+  const location = useLocation();
 
-  const [reserveSku, setReserveSku] = useState('');
-  const [reserveQty, setReserveQty] = useState(1);
-  const [reservationResult, setReservationResult] = useState(null);
-  const [countdown, setCountdown] = useState(null);
+  if (authLoading) return <div className="container" style={{ padding: '4rem' }}>Authenticating...</div>;
 
-  const [checkoutId, setCheckoutId] = useState('');
-  const [checkoutResult, setCheckoutResult] = useState(null);
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
-  // Countdown Logic
-  useEffect(() => {
-    let interval;
-    if (countdown !== null && countdown > 0) {
-      interval = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    } else if (countdown === 0) {
-      setReservationResult((prev) => ({ ...prev, expired: true }));
-    }
-    return () => clearInterval(interval);
-  }, [countdown]);
+  if (roleRequired && (Array.isArray(roleRequired) ? !roleRequired.includes(user.role) : user.role !== roleRequired)) {
+    return <div className="card-glass" style={{ textAlign: 'center' }}><h2>Access Denied</h2><p>You need {roleRequired} privileges.</p></div>;
+  }
 
-  // Handlers
-  const handleCheckInventory = async () => {
-    try {
-      const res = await axios.get(`/inventory/${checkSku}`);
-      setInventoryResult(res.data);
-      // Auto-fill Reserve SKU if product found
-      if (res.data && res.data.sku) {
-        setReserveSku(res.data.sku);
+  return children;
+};
+
+// Navigation Component
+const NavBar = () => {
+  const { user, logout } = useAuth();
+  const { cartCount } = useCart();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter') {
+      const val = searchQuery.trim();
+      if (val) {
+        navigate(`/shop?search=${val}`);
+        setSearchQuery('');
       }
-    } catch (err) {
-      setInventoryResult({ error: 'Product not found or error occurred.' });
     }
-  };
-
-  const handleReserve = async () => {
-    try {
-      // Backend expects @RequestBody Map
-      const res = await axios.post('/inventory/reserve', {
-        sku: reserveSku,
-        quantity: parseInt(reserveQty)
-      });
-      setReservationResult(res.data);
-      // Auto-fill Checkout ID if reservation successful
-      if (res.data && res.data.id) {
-        setCheckoutId(res.data.id);
-      }
-      // Start 5 min countdown (300 seconds)
-      setCountdown(300);
-    } catch (err) {
-      setReservationResult({ error: err.response?.data?.error || 'Reservation failed.' });
-    }
-  };
-
-  const handleCheckout = async (action) => {
-    try {
-      const endpoint = action === 'confirm' ? '/checkout/confirm' : '/checkout/cancel';
-      // Backend expects @RequestBody Map
-      const res = await axios.post(endpoint, {
-        reservationId: checkoutId
-      });
-      setCheckoutResult({ message: res.data.message || 'Success', type: 'success' });
-      // If confirmed or cancelled, update reservation result if visible
-      if (res.data.status || action === 'cancel') {
-        // Stop the countdown
-        setCountdown(null);
-        // Update local status
-        setReservationResult((prev) => ({
-          ...prev,
-          status: action === 'confirm' ? 'CONFIRMED' : 'CANCELLED',
-          expired: false
-        }));
-      }
-    } catch (err) {
-      setCheckoutResult({ message: err.response?.data?.error || 'Operation failed.', type: 'error' });
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   return (
-    <div className="container">
+    <>
+      <div className="top-bar">
+        FRESH FROM FARM TO TABLE | 100% ORGANIC & NATURAL
+      </div>
       <header>
-        <div className="logo">
-          <h1>SmartInventory</h1>
-        </div>
-        <p className="subtitle">Real-time Inventory Reservation & Management</p>
-      </header>
-
-      <main>
-        {/* Check Inventory */}
-        <section className="card-glass">
-          <h2><i className="fa-solid fa-magnifying-glass"></i> Check Inventory</h2>
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Enter Product SKU (e.g. IPHONE15)"
-              value={checkSku}
-              onChange={(e) => setCheckSku(e.target.value)}
-            />
-            <button className="btn btn-primary" onClick={handleCheckInventory}>Check Available</button>
+        <div className="container-full" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '80px' }}>
+          <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img src="/logo-orange.png" alt="Smart Inventory Logo" style={{ height: '65px', width: 'auto' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <h1 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#F58220', margin: 0, lineHeight: '1', letterSpacing: '0.5px', whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif" }}>
+                  SMART INVENTORY
+                </h1>
+                <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#F58220', letterSpacing: '3px', marginTop: '4px', fontFamily: "'Outfit', sans-serif" }}>
+                  ORGANIC PRODUCTS
+                </span>
+              </div>
+            </div>
           </div>
-          {inventoryResult && (
-            <div className="result-box">
-              {inventoryResult.error ? (
-                <p style={{ color: 'var(--danger-color)' }}>{inventoryResult.error}</p>
-              ) : (
-                <>
-                  <div className="stat-row">
-                    <span className="label">Total Qty</span>
-                    <span className="val">{inventoryResult.total}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="label">Reserved</span>
-                    <span className="val">{inventoryResult.reserved}</span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="label">Available</span>
-                    <span className="val" style={{ color: 'var(--success-color)' }}>
-                      {inventoryResult.available}
-                    </span>
-                  </div>
-                  <div className="stat-row">
-                    <span className="label">Sold</span>
-                    <span className="val" style={{ color: 'var(--accent-color)' }}>{inventoryResult.sold || 0}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </section>
 
-        <div className="grid-2">
-          {/* Reserve Item */}
-          <section className="card-glass">
-            <h2><i className="fa-regular fa-bookmark"></i> Reserve Item</h2>
-            <div className="form-group">
-              <label>Product SKU</label>
+          <nav style={{ padding: 0 }}>
+            <div className="nav-links">
+              <Link to="/" className="nav-link">Home</Link>
+              <Link to="/shop" className="nav-link">Shop All</Link>
+              <Link to="/orders" className="nav-link">My Orders</Link>
+              <Link to="/contact" className="nav-link">Contact Us</Link>
+            </div>
+          </nav>
+
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+            {/* Search Input */}
+            <div style={{ position: 'relative' }}>
               <input
                 type="text"
-                placeholder="SKU"
-                value={reserveSku}
-                onChange={(e) => setReserveSku(e.target.value)}
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  padding: '0.6rem 1.2rem',
+                  borderRadius: '30px',
+                  border: '1px solid #eee',
+                  background: '#f9f9f9',
+                  outline: 'none',
+                  fontSize: '0.9rem',
+                  width: '180px',
+                  transition: 'all 0.3s'
+                }}
+                onKeyDown={handleSearch}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                onBlur={(e) => e.target.style.borderColor = '#eee'}
               />
+              <i className="fa-solid fa-magnifying-glass" style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#888', pointerEvents: 'none' }}></i>
             </div>
-            <div className="form-group">
-              <label>Quantity</label>
-              <input
-                type="number"
-                min="1"
-                value={reserveQty}
-                onChange={(e) => setReserveQty(e.target.value)}
-              />
-            </div>
-            <button className="btn btn-accent" onClick={handleReserve}>Reserve Now</button>
 
-            {reservationResult && (
-              <div className="result-box">
-                {reservationResult.error ? (
-                  <p style={{ color: 'var(--danger-color)' }}>{reservationResult.error}</p>
-                ) : (
-                  <>
-                    <div className="stat-row">
-                      <span className="label">Reservation ID</span>
-                      <span className="val" style={{ color: 'var(--accent-color)' }}>{reservationResult.id}</span>
-                    </div>
-                    <div className="stat-row">
-                      <span className="label">Status</span>
-                      <span className="val">{reservationResult.status}</span>
-                    </div>
-                    {!reservationResult.expired && countdown !== null && (
-                      <div className="stat-row">
-                        <span className="label">Expires In</span>
-                        <span className="val" style={{ color: 'var(--danger-color)' }}>
-                          {formatTime(countdown)}
-                        </span>
-                      </div>
-                    )}
-                    {reservationResult.expired && (
-                      <p style={{ color: 'var(--danger-color)', marginTop: '0.5rem' }}>Reservation Expired</p>
-                    )}
-                  </>
+            {/* Manage & User Section */}
+            {!user ? (
+              <Link to="/login" className="nav-link" style={{ fontSize: '1.1rem' }}>
+                <i className="fa-regular fa-user"></i>
+              </Link>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+                {(user.role === 'ROLE_ADMIN' || user.role === 'ROLE_CO_ADMIN') && (
+                  <Link to="/admin" style={{ color: 'var(--accent-color)', textDecoration: 'none', fontWeight: '800', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <i className="fa-solid fa-screwdriver-wrench"></i> Manage
+                  </Link>
                 )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={logout}>
+                  <span style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{user.username}</span>
+                  <i className="fa-solid fa-right-from-bracket" style={{ color: 'var(--danger-color)', fontSize: '0.9rem' }}></i>
+                </div>
               </div>
             )}
-          </section>
 
-          {/* Manage Checkout */}
-          <section className="card-glass">
-            <h2><i className="fa-solid fa-cart-shopping"></i> Manage Checkout</h2>
-            <div className="form-group">
-              <label>Reservation ID</label>
-              <input
-                type="text"
-                placeholder="Enter ID"
-                value={checkoutId}
-                onChange={(e) => setCheckoutId(e.target.value)}
-              />
+            {/* Cart Icon */}
+            <div style={{ position: 'relative', cursor: 'pointer', padding: '5px' }} onClick={() => navigate('/cart')}>
+              <i className="fa-solid fa-cart-shopping" style={{ color: 'var(--text-primary)', fontSize: '1.2rem' }}></i>
+              <span style={{
+                position: 'absolute',
+                top: '-2px',
+                right: '-2px',
+                background: 'var(--accent-color)',
+                color: 'white',
+                borderRadius: '50%',
+                minWidth: '18px',
+                height: '18px',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}>
+                {cartCount}
+              </span>
             </div>
-            <div className="action-buttons">
-              <button className="btn btn-success" onClick={() => handleCheckout('confirm')}>Confirm</button>
-              <button className="btn btn-danger" onClick={() => handleCheckout('cancel')}>Cancel</button>
-            </div>
-
-            {checkoutResult && (
-              <div className="result-box">
-                <p style={{ color: checkoutResult.type === 'success' ? 'var(--success-color)' : 'var(--danger-color)' }}>
-                  {checkoutResult.message}
-                </p>
-              </div>
-            )}
-          </section>
+          </div>
         </div>
-      </main>
+      </header>
+    </>
+  );
+}
 
-      {/* FontAwesome Cdn handled in index.html or npm. For now sticking to index.html approach or manual import. 
-          React recommends installing icons, but for simplicity I will add the CDN to index.html */}
-    </div>
+// Axios Interceptor Wrapper
+const AxiosInterceptor = ({ children }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Request interceptor removed (Handled in AuthContext to avoid race conditions)
+
+    // Response interceptor to handle 401/403 errors
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.warn("Unauthorized/Forbidden access, logging out...");
+          logout();
+          navigate('/login');
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [user, logout, navigate]);
+
+  return children;
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <AxiosInterceptor>
+            <NavBar />
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/shop" element={<Shop />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+                <Route path="/checkout/:orderId" element={<ProtectedRoute><CheckoutSummary /></ProtectedRoute>} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/reserve/:sku" element={<ReservationPage />} />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute roleRequired={["ROLE_ADMIN", "ROLE_CO_ADMIN"]}>
+                      <Admin />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </main>
+          </AxiosInterceptor>
+        </Router>
+      </CartProvider>
+    </AuthProvider >
   );
 }
 
