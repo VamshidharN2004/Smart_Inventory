@@ -1,14 +1,22 @@
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function Cart() {
     const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
+    const { user } = useAuth();
     const navigate = useNavigate();
 
     const total = cart.reduce((acc, item) => acc + (item.product.price * (item.quantity || 0)), 0).toFixed(2);
 
     const handleCheckout = async () => {
+        if (!user) {
+            // Redirect to login if user is not authenticated
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
+
         const items = cart.map(item => ({
             sku: item.product.sku,
             quantity: item.quantity

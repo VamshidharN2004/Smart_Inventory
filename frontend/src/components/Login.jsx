@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 function Login() {
     const [username, setUsername] = useState('');
@@ -9,6 +9,7 @@ function Login() {
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -21,7 +22,8 @@ function Login() {
                 token: res.data.token
             });
 
-            navigate('/');
+            const from = location.state?.from || '/';
+            navigate(from, { replace: true });
         } catch (err) {
             setError('Invalid Username or Password');
         }

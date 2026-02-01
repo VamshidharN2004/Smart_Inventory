@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 
 function Signup() {
     const [formData, setFormData] = useState({
@@ -13,6 +13,7 @@ function Signup() {
     });
     const [result, setResult] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,7 +36,7 @@ function Signup() {
                 mobile: formData.mobile
             });
             setResult({ message: 'Account created! Redirecting to login...', type: 'success' });
-            setTimeout(() => navigate('/login'), 2000);
+            setTimeout(() => navigate('/login', { state: location.state }), 2000);
         } catch (err) {
             setResult({ error: err.response?.data?.error || 'Registration failed.' });
         }
@@ -200,7 +201,7 @@ function Signup() {
 
                         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                                Already have an account? <Link to="/login" style={{ color: 'var(--success-color)', fontWeight: '700', textDecoration: 'none' }}>Log In</Link>
+                                Already have an account? <Link to="/login" state={location.state} style={{ color: 'var(--success-color)', fontWeight: '700', textDecoration: 'none' }}>Log In</Link>
                             </p>
                         </div>
                     </form>
