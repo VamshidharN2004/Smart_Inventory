@@ -1,10 +1,8 @@
 package com.smartinventory.inventory_service.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
 @Entity
-@Data
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -13,7 +11,6 @@ public class OrderItem {
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     @com.fasterxml.jackson.annotation.JsonIgnore
-    @lombok.ToString.Exclude
     private ShopOrder order;
 
     @ManyToOne
@@ -22,4 +19,50 @@ public class OrderItem {
 
     private Integer quantity;
     private Double price;
+
+    // Constructors
+    public OrderItem() {
+    }
+
+    // Getters and Setters
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public ShopOrder getOrder() {
+        return order;
+    }
+
+    public void setOrder(ShopOrder order) {
+        this.order = order;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
 }
