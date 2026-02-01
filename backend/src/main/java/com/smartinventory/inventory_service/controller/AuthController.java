@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@CrossOrigin(origins = { "https://smart-inventory-virid.vercel.app", "http://localhost:3000", "http://localhost:5173" })
 @RequestMapping("/auth")
 public class AuthController {
 
