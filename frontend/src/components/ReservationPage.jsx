@@ -61,7 +61,16 @@ function ReservationPage() {
         }
     };
 
-    if (!product) return <div style={{ textAlign: 'center', marginTop: '4rem' }}>Loading...</div>;
+    if (result?.error) {
+        return (
+            <div style={{ textAlign: 'center', marginTop: '4rem' }}>
+                <div style={{ color: '#e53935', fontSize: '1.5rem', marginBottom: '1rem' }}><i className="fa-solid fa-triangle-exclamation"></i> Product Not Found</div>
+                <button className="btn btn-outline-dark" onClick={() => navigate('/shop')}>Back to Shop</button>
+            </div>
+        );
+    }
+
+    if (!product) return <div style={{ textAlign: 'center', marginTop: '4rem' }}><i className="fa-solid fa-spinner fa-spin"></i> Loading Product Details...</div>;
 
     const available = product.total - product.reserved;
 

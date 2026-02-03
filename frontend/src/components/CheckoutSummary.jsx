@@ -41,7 +41,9 @@ function CheckoutSummary() {
             setOrder(res.data);
 
             if (res.data.status === 'PENDING') {
-                const expiresAt = new Date(res.data.expiresAt).getTime();
+                // Appending 'Z' tells the browser this time is in UTC, not Local Time.
+                const timeString = res.data.expiresAt.endsWith('Z') ? res.data.expiresAt : res.data.expiresAt + 'Z';
+                const expiresAt = new Date(timeString).getTime();
                 const now = new Date().getTime();
                 const diff = Math.floor((expiresAt - now) / 1000);
                 setCountdown(diff > 0 ? diff : 0);
