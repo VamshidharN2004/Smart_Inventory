@@ -15,4 +15,6 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.sku = :sku")
     Optional<Product> findBySkuWithLock(@org.springframework.data.repository.query.Param("sku") String sku);
+
+    Optional<Product> findFirstBySkuIgnoreCase(String sku);
 }

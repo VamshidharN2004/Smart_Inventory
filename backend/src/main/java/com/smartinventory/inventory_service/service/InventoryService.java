@@ -22,10 +22,13 @@ public class InventoryService {
     private ReservationRepository reservationRepository;
 
     @Transactional
-    public Reservation reserveInventory(String sku, int quantity) {
+    public Reservation reserveInventory(String rawSku, int quantity) {
+        // Resolve correct SKU (handle case sensitivity/trimming)
+        String sku = resolveSku(rawSku);
+
         // Lock product row to prevent concurrent overselling
         Product product = productRepository.findBySkuWithLock(sku)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new RuntimeException("Product not found: " + sku));
 
         int available = product.getTotalQuantity() - product.getReservedQuantity();
         if (available < quantity) {
@@ -106,7 +109,8 @@ public class InventoryService {
     }
 
     @Transactional
-    public void restoreAvailableQuantity(String sku, int quantity) {
+    public void restoreAvailableQuantity(String rawSku, int quantity) {
+        String sku = resolveSku(rawSku);
         Product product = productRepository.findBySkuWithLock(sku)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + sku));
 
@@ -115,7 +119,22 @@ public class InventoryService {
     }
 
     public Product getProduct(String sku) {
-        return productRepository.findById(sku).orElse(null);
+        try {
+            String resolved = resolveSku(sku);
+            return productRepository.findById(resolved).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Helper to resolve exact SKU from fuzzy input
+    private String resolveSku(String rawSku) {
+        if (productRepository.existsById(rawSku)) {
+            return rawSku;
+        }
+        return productRepository.findFirstBySkuIgnoreCase(rawSku.trim())
+                .map(Product::getSku)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + rawSku));
     }
 
     public java.util.List<Product> getAllProducts() {
