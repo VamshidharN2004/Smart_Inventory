@@ -55,7 +55,11 @@ function Shop() {
 
             <div className="features-grid">
                 {loading ? (
-                    <p className="text-center">Loading fresh products...</p>
+                    <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
+                        <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '3rem', color: 'var(--primary-color)', marginBottom: '1.5rem' }}></i>
+                        <p style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Gathering fresh harvest...</p>
+                        <p style={{ fontSize: '0.9rem', color: '#999', marginTop: '0.5rem' }}>(This may take up to 60s if the cloud server is waking up)</p>
+                    </div>
                 ) : (
                     products.length === 0 ? (
                         <p className="text-center">No products available.</p>
