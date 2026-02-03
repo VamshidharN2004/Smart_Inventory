@@ -43,7 +43,15 @@ function MyOrders() {
         }
     };
 
-    if (loading) return <div className="container" style={{ padding: '4rem' }}>Loading your orders...</div>;
+    if (loading) return (
+        <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>
+            <div style={{ padding: '3rem' }}>
+                <i className="fa-solid fa-circle-notch fa-spin" style={{ fontSize: '3rem', color: 'var(--primary-color)', marginBottom: '1.5rem' }}></i>
+                <p style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Retrieving your order history...</p>
+                <p style={{ fontSize: '0.9rem', color: '#999', marginTop: '0.5rem' }}>(This may take up to 60s if the cloud server is waking up)</p>
+            </div>
+        </div>
+    );
     if (error) return <div className="container" style={{ padding: '4rem', color: 'red' }}>{error}</div>;
 
     return (
