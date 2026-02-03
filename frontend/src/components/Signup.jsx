@@ -12,6 +12,7 @@ function Signup() {
         retypePassword: ''
     });
     const [result, setResult] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -27,6 +28,9 @@ function Signup() {
             return;
         }
 
+        setResult(null);
+        setIsLoading(true);
+
         try {
             await axios.post('/auth/register', {
                 username: formData.username,
@@ -39,6 +43,8 @@ function Signup() {
             setTimeout(() => navigate('/login', { state: location.state }), 2000);
         } catch (err) {
             setResult({ error: err.response?.data?.error || 'Registration failed.' });
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -186,17 +192,24 @@ function Signup() {
 
                         <button
                             type="submit"
-                            className="btn btn-primary" // Changed to primary green for Signup to differ from Accent orange? Or keep accent? Let's use Primary Green for "Start Growing" feel.
+                            className="btn btn-primary"
+                            disabled={isLoading}
                             style={{
                                 width: '100%',
                                 padding: '1.2rem',
                                 borderRadius: '12px',
                                 fontSize: '1.1rem',
                                 fontWeight: '700',
-                                boxShadow: '0 10px 25px rgba(46, 125, 50, 0.2)'
+                                boxShadow: '0 10px 25px rgba(46, 125, 50, 0.2)',
+                                opacity: isLoading ? 0.7 : 1,
+                                cursor: isLoading ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            Create Account
+                            {isLoading ? (
+                                <span><i className="fa-solid fa-spinner fa-spin"></i> Creating Account...</span>
+                            ) : (
+                                "Create Account"
+                            )}
                         </button>
 
                         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
@@ -209,10 +222,9 @@ function Signup() {
             </div>
 
             {/* Right Side - Image */}
-            <div style={{
+            <div className="mobile-hidden" style={{
                 flex: '1',
                 position: 'relative',
-                display: { xs: 'none', md: 'block' },
                 // Make it sticky
                 height: '100vh',
                 position: 'sticky',

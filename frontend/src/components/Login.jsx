@@ -7,12 +7,15 @@ function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+        setError('');
         try {
             const res = await axios.post('/auth/login', { username, password });
 
@@ -26,6 +29,8 @@ function Login() {
             navigate(from, { replace: true });
         } catch (err) {
             setError('Invalid Username or Password');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -38,10 +43,10 @@ function Login() {
             background: '#f8f9fa'
         }}>
             {/* Left Side - Image */}
-            <div style={{
+            <div className="mobile-hidden" style={{
                 flex: '1',
                 position: 'relative',
-                display: { xs: 'none', md: 'block' } // Hide on small screens if we had breakpoints, but for now just flex: 1
+                // display logic moved to CSS class
             }}>
                 <img
                     src="/login-bg.png" // The image we copied
@@ -142,16 +147,23 @@ function Login() {
                         <button
                             type="submit"
                             className="btn btn-primary"
+                            disabled={isLoading}
                             style={{
                                 width: '100%',
                                 padding: '1.2rem',
                                 borderRadius: '12px',
                                 fontSize: '1.1rem',
                                 fontWeight: '700',
-                                boxShadow: '0 10px 25px rgba(46, 125, 50, 0.2)'
+                                boxShadow: '0 10px 25px rgba(46, 125, 50, 0.2)',
+                                opacity: isLoading ? 0.7 : 1,
+                                cursor: isLoading ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            Sign In
+                            {isLoading ? (
+                                <span><i className="fa-solid fa-spinner fa-spin"></i> Signing In...</span>
+                            ) : (
+                                "Sign In"
+                            )}
                         </button>
 
                         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
